@@ -4,7 +4,7 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Grid, Typography, TextField, Button, CircularProgress } from "@mui/material";
 import useGlobalState from '../store';
-import { setPartiesData } from "../store/actions";
+import { setPartiesData  } from "../store/actions";
 import { ADMIN_SERVICE } from "../services/admin.services";
 import { toast } from "react-toastify";
 

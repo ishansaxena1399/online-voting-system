@@ -23,3 +23,6 @@ yarn-debug.log*
 yarn-error.log*
 
 .env
+
+# original deploy url
+# https://CodersGas.github.io/online_voting_system/

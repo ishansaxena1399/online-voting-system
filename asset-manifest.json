@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/online-voting-system/static/css/main.9ec4b901.css",
-    "main.js": "/online-voting-system/static/js/main.72b7f0f4.js",
+    "main.css": "/online-voting-system/static/css/main.4454486e.css",
+    "main.js": "/online-voting-system/static/js/main.3e182acb.js",
     "index.html": "/online-voting-system/index.html",
-    "main.9ec4b901.css.map": "/online-voting-system/static/css/main.9ec4b901.css.map",
-    "main.72b7f0f4.js.map": "/online-voting-system/static/js/main.72b7f0f4.js.map"
+    "main.4454486e.css.map": "/online-voting-system/static/css/main.4454486e.css.map",
+    "main.3e182acb.js.map": "/online-voting-system/static/js/main.3e182acb.js.map"
   },
   "entrypoints": [
-    "static/css/main.9ec4b901.css",
-    "static/js/main.72b7f0f4.js"
+    "static/css/main.4454486e.css",
+    "static/js/main.3e182acb.js"
   ]
 }

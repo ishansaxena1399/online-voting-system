@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useGlobalState from "../store";
 import { useForm, Controller } from "react-hook-form";
 import * as yup from "yup";
@@ -32,6 +32,7 @@ const ValidationSchema = yup.object().shape({
       is: true,
       then: yup.string().max(6, "Please enter correct OTP").required("Please enter OTP sent to your mobile")
     }),
+  profileImage: yup.string().required("Please take your photo")
 });
 
 const Login = () => {
@@ -49,6 +50,8 @@ const Login = () => {
     handleSubmit,
     setValue,
     getValues,
+    clearErrors,
+    formState: { errors }
   } = useForm({
     resolver: yupResolver(ValidationSchema)
   });
@@ -60,8 +63,42 @@ const Login = () => {
   const [loginFormData, setLoginFormData] = useState(null);
   const [confirmationPhoneResult, setConfirmationPhoneResult] = useState(null);
   const [visible, setVisible] = useState(false);
+  const [cameraStarted, setCameraStarted] = useState(false);
+  const [videoStream, setVideoStream] = useState(false);
 
   const handlePasswordVisible = () => setVisible(!visible);
+
+  const handleStartCamera = (takeAgain) => {
+    if(takeAgain) {
+      let canvasElement = document.getElementById("canvas");
+      canvasElement.style.display = "none";
+      setValue("profileImage", undefined);
+    }
+    setCameraStarted(true);
+  }
+
+  const handleCancelPhotoTaking = async() => {
+    let videoElement = document.getElementById("video");
+    setCameraStarted(false);
+    videoElement.pause();
+    videoElement.src = "";
+    videoStream.getTracks()[0].stop();
+  }
+
+  const handleTakePhoto = async () => {
+    let canvasElement = document.getElementById("canvas");
+    let videoElement = document.getElementById("video");
+    canvasElement.getContext('2d').drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+    let image_data_url = canvasElement.toDataURL('image/jpeg');
+    console.log(image_data_url);
+
+    videoElement.style.display = "none";
+    canvasElement.style.display = "block";
+
+    setValue("profileImage", image_data_url);
+    handleCancelPhotoTaking();
+    clearErrors("profileImage")
+  }
 
   const handleFormSubmit = async (data) => {
     try {
@@ -86,7 +123,7 @@ const Login = () => {
           });
       } else {
 
-        confirmationPhoneResult.confirm(data.otp).then(async (result) => {
+        await confirmationPhoneResult.confirm(data.otp).then(async (result) => {
           const payload = { ...loginFormData };
           delete payload.otp;
           delete payload.isVerificationStarted;
@@ -133,6 +170,23 @@ const Login = () => {
     setLoading(false);
   }
 
+  useEffect(async () => {
+    if (cameraStarted) {
+      let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(result => result)
+        .catch(error => error);
+
+      if (stream.message?.includes("Permission denied")) {
+        setCameraStarted(false);
+        toast.error("Please give permissions to take photo");
+      } else {
+        let videoElement = document.getElementById("video");
+        videoElement.srcObject = stream;
+        setVideoStream(stream);
+      }
+    }
+  }, [cameraStarted])
+
   return (
     <Layout>
       <div className="bootstrapContainer" >
@@ -143,6 +197,54 @@ const Login = () => {
           >
             <p className="loginFormTitle" >Login</p>
             <Grid container >
+              <Grid item md={12} xs={12} sm={12} >
+                <Box display="flex" justifyContent="center" flexDirection="column" alignItems="center" >
+                  {
+                    <canvas width="320" height="240" id="canvas" ></canvas>
+                  }
+                  {
+                    cameraStarted &&
+                    <video id="video" autoPlay width="320" height="240" ></video>
+                  }
+
+                  <Box width={1} display="flex" alignItems="center" justifyContent="center" style={{ gap: "1rem" }} >
+                    <Button
+                      className="clickPhotoBtn"
+                      onClick={cameraStarted ? handleTakePhoto : handleStartCamera}
+                    >
+                      {cameraStarted ? "Click" : "Take"} Photo
+                    </Button>
+
+                    {
+                      getValues("profileImage") !== undefined ?
+                        <Button
+                          className="clickPhotoBtn"
+                          onClick={() => handleStartCamera(true)}
+                        >
+                          Take Again
+                        </Button>
+                        :
+                        cameraStarted ?
+                          <Button
+                            className="clickPhotoBtn"
+                            onClick={handleCancelPhotoTaking}
+                          >
+                            Cancel
+                          </Button>
+                          :
+                          null
+                    }
+                  </Box>
+
+                  {
+                    errors?.profileImage &&
+                    <p className="errorText" >
+                      {errors?.profileImage.message}
+                    </p>
+                  }
+                </Box>
+              </Grid>
+
               <Grid item md={12} xs={12} sm={12} >
                 <Typography className="formLabel" >
                   Email
@@ -190,14 +292,14 @@ const Login = () => {
                         type: visible ? "text" : "password"
                       }}
                       InputProps={{
-                        endAdornment: 
-                        <InputAdornment position="end" >
-                          <IconButton onClick={handlePasswordVisible} >
-                            {
-                              visible ? <VisibilityOffIcon style={{color: "#fff"}} /> : <VisibilityIcon style={{color: "#fff"}} />
-                            }
-                          </IconButton>
-                        </InputAdornment>
+                        endAdornment:
+                          <InputAdornment position="end" >
+                            <IconButton onClick={handlePasswordVisible} >
+                              {
+                                visible ? <VisibilityOffIcon style={{ color: "#fff" }} /> : <VisibilityIcon style={{ color: "#fff" }} />
+                              }
+                            </IconButton>
+                          </InputAdornment>
                       }}
                     />
                   )}
@@ -275,11 +377,11 @@ const Login = () => {
 
                 {
                   timeStarted ?
-                  null
-                  :
-                  <Link to="/register" className="registerText" >
-                    Register
-                  </Link>
+                    null
+                    :
+                    <Link to="/register" className="registerText" >
+                      Register
+                    </Link>
                 }
               </Box>
             </Grid>

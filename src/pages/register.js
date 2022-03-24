@@ -31,6 +31,7 @@ const ValidationSchema = yup.object().shape({
       is: true,
       then: yup.string().max(6, "Please enter correct OTP").required("Please enter OTP sent to your mobile")
     }),
+  profileImage: yup.string().required("Please take your photo")
 });
 
 const Register = () => {
@@ -38,7 +39,10 @@ const Register = () => {
     control,
     handleSubmit,
     setValue,
-    getValues
+    getValues,
+    formState: { errors },
+    setError,
+    clearErrors
   } = useForm({
     resolver: yupResolver(ValidationSchema)
   });
@@ -56,8 +60,41 @@ const Register = () => {
   const [confirmationPhoneResult, setConfirmationPhoneResult] = useState(null);
   const [otpSent, setOtpSent] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [cameraStarted, setCameraStarted] = useState(false);
+  const [videoStream, setVideoStream] = useState(false);
 
   const handlePasswordVisible = () => setVisible(!visible);
+  const handleStartCamera = (takeAgain) => {
+    if(takeAgain) {
+      let canvasElement = document.getElementById("canvas");
+      canvasElement.style.display = "none";
+      setValue("profileImage", undefined);
+    }
+    setCameraStarted(true);
+  }
+
+  const handleCancelPhotoTaking = async() => {
+    let videoElement = document.getElementById("video");
+    setCameraStarted(false);
+    videoElement.pause();
+    videoElement.src = "";
+    videoStream.getTracks()[0].stop();
+  }
+
+  const handleTakePhoto = async () => {
+    let canvasElement = document.getElementById("canvas");
+    let videoElement = document.getElementById("video");
+    canvasElement.getContext('2d').drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+    let image_data_url = canvasElement.toDataURL('image/jpeg');
+    console.log(image_data_url);
+
+    videoElement.style.display = "none";
+    canvasElement.style.display = "block";
+
+    setValue("profileImage", image_data_url);
+    handleCancelPhotoTaking();
+    clearErrors("profileImage")
+  }
 
   const handleFormSubmit = async (data) => {
     try {
@@ -115,10 +152,27 @@ const Register = () => {
   }
 
   useEffect(() => {
-    if(timeStarted) {
+    if (timeStarted) {
       toast.warning("Election going on. Please wait to register");
     }
   }, []);
+
+  useEffect(async () => {
+    if (cameraStarted) {
+      let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(result => result)
+        .catch(error => error);
+
+      if (stream.message?.includes("Permission denied")) {
+        setCameraStarted(false);
+        toast.error("Please give permissions to take photo");
+      } else {
+        let videoElement = document.getElementById("video");
+        videoElement.srcObject = stream;
+        setVideoStream(stream);
+      }
+    }
+  }, [cameraStarted])
 
   return (
     <Layout>
@@ -130,6 +184,54 @@ const Register = () => {
           >
             <p className="loginFormTitle" >Register</p>
             <Grid container >
+              <Grid item md={12} xs={12} sm={12} >
+                <Box display="flex" justifyContent="center" flexDirection="column" alignItems="center" >
+                  {
+                    <canvas width="320" height="240" id="canvas" ></canvas>
+                  }
+                  {
+                    cameraStarted &&
+                    <video id="video" autoPlay width="320" height="240" ></video>
+                  }
+
+                  <Box width={1} display="flex" alignItems="center" justifyContent="center" style={{gap: "1rem"}} >
+                    <Button
+                      className="clickPhotoBtn"
+                      onClick={cameraStarted ? handleTakePhoto : handleStartCamera}
+                    >
+                      {cameraStarted ? "Click" : "Take"} Photo
+                    </Button>
+
+                    {
+                      getValues("profileImage") !== undefined ?
+                      <Button
+                        className="clickPhotoBtn"
+                        onClick={() => handleStartCamera(true)}
+                      >
+                        Take Again
+                      </Button>
+                      :
+                      cameraStarted ?
+                      <Button
+                        className="clickPhotoBtn"
+                        onClick={handleCancelPhotoTaking}
+                      >
+                        Cancel
+                      </Button>
+                      :
+                      null
+                    }
+                  </Box>
+
+                  {
+                    errors?.profileImage &&
+                    <p className="errorText" >
+                      {errors?.profileImage.message}
+                    </p>
+                  }
+                </Box>
+              </Grid>
+
               <Grid item md={12} xs={12} sm={12} >
                 <Typography className="formLabel" >
                   Name
@@ -222,14 +324,14 @@ const Register = () => {
                         type: visible ? "text" : "password"
                       }}
                       InputProps={{
-                        endAdornment: 
-                        <InputAdornment position="end" >
-                          <IconButton onClick={handlePasswordVisible} >
-                            {
-                              visible ? <VisibilityOffIcon style={{color: "#fff"}} /> : <VisibilityIcon style={{color: "#fff"}} />
-                            }
-                          </IconButton>
-                        </InputAdornment>
+                        endAdornment:
+                          <InputAdornment position="end" >
+                            <IconButton onClick={handlePasswordVisible} >
+                              {
+                                visible ? <VisibilityOffIcon style={{ color: "#fff" }} /> : <VisibilityIcon style={{ color: "#fff" }} />
+                              }
+                            </IconButton>
+                          </InputAdornment>
                       }}
                     />
                   )}

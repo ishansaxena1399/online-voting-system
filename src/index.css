@@ -63,7 +63,8 @@ a {
 .loginFormContainerDiv form .MuiOutlinedInput-notchedOutline {
   border-color: #fff !important;
 }
-.loginButton {
+.loginButton,
+.clickPhotoBtn {
   box-shadow: 
     0.2em 0.2em 0 0 #fff,
     inset 0.2em 0.2em 0 0 #fff !important;
@@ -78,11 +79,17 @@ a {
   margin-top: 2rem !important;
 }
 .loginButton:hover,
-.loginButton:focus {
+.loginButton:focus,
+.clickPhotoBtn:hover,
+.clickPhotoBtn:focus {
   box-shadow: 
       0 0 0 0 #fff,
       inset 6em 3.5em 0 0 #fff !important;
   color: #000 !important;
+}
+.clickPhotoBtn {
+  padding: 0.8em 0.5em !important;
+  font-size: 0.8rem !important;
 }
 .formLabel {
   font-size: 1.1rem !important;
@@ -472,6 +479,13 @@ a {
 .electionStatusText {
   padding: 1rem 0;
   font-size: 1.2rem;
+}
+#canvas {
+  display: none;
+}
+.loginFormContainerDiv .errorText {
+  color: #fff !important;
+  margin-top: 1rem !important;
 }
 
 .bootstrapContainer {

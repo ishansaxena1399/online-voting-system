@@ -172,7 +172,7 @@ const Register = () => {
         setVideoStream(stream);
       }
     }
-  }, [cameraStarted])
+  }, [cameraStarted]);
 
   return (
     <Layout>
@@ -187,7 +187,7 @@ const Register = () => {
               <Grid item md={12} xs={12} sm={12} >
                 <Box display="flex" justifyContent="center" flexDirection="column" alignItems="center" >
                   {
-                    <canvas width="320" height="240" id="canvas" ></canvas>
+                    <canvas width="100" height="100" id="canvas" ></canvas>
                   }
                   {
                     cameraStarted &&

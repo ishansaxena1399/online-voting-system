@@ -482,7 +482,6 @@ a {
 }
 #canvas {
   display: none;
-  transform: scale(1.2);
 }
 .loginFormContainerDiv .errorText {
   color: #fff !important;
